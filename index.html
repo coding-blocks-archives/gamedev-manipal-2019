@@ -29,27 +29,46 @@
     var platforms;
     var player;
     var cursors;
+    var coins;
+    var score_text;
+    var score = 0;
 
     function preload ()
     {
         this.load.image("sky", "assets/sky.png");
+        this.load.image("star", "assets/star.png");
         this.load.image("platform", "assets/platform.png");
+        this.load.audio("metal", "assets/metal.wav");
         this.load.spritesheet("dude", "assets/dude.png", {frameWidth: 32, frameHeight: 48});
     }
 
     function create ()
     {
         this.add.image(0, 0, "sky").setOrigin(0, 0)
+        
 
         platforms = this.physics.add.staticGroup()
 
         platforms.create(200, 200, "platform");
-        platforms.create(700, 250, "platform");
+        platforms.create(700, 300, "platform");
         platforms.create(100, 400, "platform");
 
+        coins = this.physics.add.group();
+        
+        for(let i=2; i<8; i++){
+            coin = coins.create(i*100, 0, "star")
+            coin.setBounce(.2);
+            coin.setFriction(10, 10)
+        }
+        
+
         player = this.physics.add.sprite(100, 100, "dude");
+        player.setCollideWorldBounds(true);
 
         this.physics.add.collider(platforms, player);
+        this.physics.add.collider(platforms, coins);
+        this.physics.add.collider(player, coins, coin_player_collide, check_coin_player_collide);
+        this.physics.add.collider(coins, coins);
 
         this.anims.create({
             key : "left",
@@ -73,6 +92,18 @@
         });
 
         cursors = this.input.keyboard.createCursorKeys();
+
+        score_text = this.add.text(100, 100, "Score : 0")
+    }
+
+    function check_coin_player_collide(player, coin){
+        return  player.body.velocity.x > 0;
+    }
+
+    function coin_player_collide(player, coin){
+        coin.destroy()
+        score += 10
+        game.sound.play("metal")
     }
 
     function update(time, delta){
@@ -89,7 +120,7 @@
 
         if(cursors.up.isDown){
             if(player.body.touching.down){
-                player.setVelocityY(-50);
+                player.setVelocityY(-100);
             }
         }
 
@@ -98,8 +129,8 @@
             player.anims.play("stay", true)
             player.setVelocityX(0);
         }
-        
 
+        score_text.setText(`Score : ${score}`);
         
     }
 
